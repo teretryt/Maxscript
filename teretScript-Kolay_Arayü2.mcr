@@ -2,9 +2,6 @@ macroScript Kolay_Arayü2 category:"teretScript" tooltip:"StandOlusturucu" Icon:#
 (
 
 
-
---Stand
-(
 --Özellikler
 standGenislik = 300
 standUzunluk = 500
@@ -20,6 +17,7 @@ rafmax = 250
 rafMiktar = 9
 rafDikme = 4
 dikmeAr = 0
+dikmeGenislik = 9
 
 alyuk = 50
 algen = 4
@@ -31,24 +29,183 @@ dikme = false
 lStand = false
 uStand = false
 
-rollout standci "Stand Olusturucu"
+	duvar1x = ((float)standGenislik / 2) 
+	duvar2y = (((float)standUzunluk / 2) - ((float)DuvarK / 2))
+	ud = 0
+	rollout Boxtool "Box Creator"
+	(
+		spinner count "Number:" type:#integer range: [1,100,10]
+		spinner Yukseklik "Yukseklik:" range: [1,100,10]
+		spinner Uzunluk "Uzunluk:" range: [1,100,200]
+		spinner Derinlik "Derinlik:" range: [1,100,40]
+		spinner distance "Distance Inbetween:" range: [1,200,25]
+		pickbutton create "Create Boxes" width:120
+		
+		
+		--GET AN OBJECT TO CREATE OTHER OBJECTS ON
+		on create picked obj do
+		(
+			if isValidNode obj do
+			(
+				--GET THE MOUSE RAY FROM THE USER CLICK
+				
+				intRay = intersectRay obj (mapScreenToWorldRay mouse.pos)
+				
+				--CREATE A TRANSFORM FROM THE RAY INTERSECT WITH SURFACE
+				creationTransform = matrixFromNormal intRay.dir * transMatrix intRay.pos
+				--CREATE BOXES IN THE NEW TRANSFORM
+				in coordsys creationTransform
+				(
+					undo on(
+						
+					b = Box()
+					if ( creationTransform.row4.x == duvar1x - DuvarK / 2  ) 
+					then(
+						
+					ud = 1
+					b.length= Uzunluk.value 
+					b.width= Derinlik.value 
+					b.height= Yukseklik.value
+					b.transform = creationTransform
+					b.pos = [distance.value,0,0]
+					)
+					
+					--ff = creationTransform.row4.y  as string
+					--messageBox ff
+					
+					else if ( creationTransform.row4.y == duvar2y - (DuvarK / 2)  ) 
+					then(
+						
+					ud = 2
+					b.length= Uzunluk.value 
+					b.width= Derinlik.value 
+					b.height= Yukseklik.value
+					b.transform = creationTransform
+					b.pos = [distance.value,0,0]
+					)
+					
+					else
+					(
+						ud = 0
+						b.length= Uzunluk.value 
+						b.width= Derinlik.value 
+						b.height= Yukseklik.value
+						b.transform = creationTransform
+						b.pos = [distance.value,0,0]
+					)
+					
+					for i in 1 to count.value do
+					(
+						if ud == 1 then
+						(
+						b2 = instance b						
+						--ROTATE AND PLACE THE BOX
+						b2.transform = creationTransform
+						rotate b2 (AngleAxis 90 [0,0,1])
+						rotate b2 (AngleAxis 90 [1,0,0])
+						b2.pos = [0,-((i-1)*(distance.value)),(Derinlik.value / 2)]
+						)
+						else if ud == 2 then 
+						(
+						b2 = instance b						
+						--ROTATE AND PLACE THE BOX
+						b2.transform = creationTransform
+						rotate b2 (AngleAxis 90 [0,1,0])
+						b2.pos = [((i-1)*(distance.value)),0,(Derinlik.value/2)]
+						)
+						else
+						(
+						b2 = instance b						
+						--ROTATE AND PLACE THE BOX
+						b2.transform = creationTransform
+						b2.pos = [0,((i-1)*(distance.value)),0]
+						)
+					)
+					delete b
+					ud = 0
+				)
+				)
+				)
+			)
+		)
+
+		tool otobox
+		(
+		local targ
+		on mousePoint click do coordsys grid 
+		(
+		if click == 1 then -- create key, back & fill lights at mousedown
+		(
+		targ = Box pos:gridPoint isSelected:on
+		targ.pos.z = 0
+		)
+		if click == 3 then #stop
+		)
+		on mouseMove click do
+		(
+		if click == 2 then -- drag out & round on x-y plane
+		(
+		targ.length = abs gridDist.y
+		targ.width = abs gridDist.x
+		)
+		else if click == 3 then -- drag up to elevate lights
+		(
+		targ.height = gridDist.z
+		)
+		)
+		)
+
+		tool otoSPH
+		(
+		local targ
+		on mousePoint click do coordsys grid 
+		(
+		if click == 1 then -- create key, back & fill lights at mousedown
+		(
+		targ = Sphere pos:gridPoint isSelected:on
+		targ.pos.z = 0
+		)
+		if click == 3 then #stop
+		)
+		on mouseMove click do
+		(
+		if click == 2 then -- drag out & round on x-y plane
+		(
+		targ.radius = abs gridDist.x
+		)
+		else if click == 3 then -- drag up to elevate lights
+		(
+		targ.segs = gridDist.z
+		)
+		)
+		)
+
+
+
+
+--Stand
+(	
+	
+rollout standci "Stand Olusturucu" width:203 height:334
 (
 	button 'btn1' "OLUSTUR" pos:[3,292] width:197 height:34 align:#left
 	
-	label 'lbl9' "Alin Yuk." pos:[65,173] width:52 height:14 align:#left
-	label 'lbl19' "Raf Yuk." pos:[128,209] width:49 height:14 align:#left
-	label 'lbl8' "Raf Uzn." pos:[128,173] width:49 height:14 align:#left
-	label 'lbl7' "Raf Gen." pos:[128,140] width:45 height:14 align:#left
+	label 'lbl9' "Alin Yuk." pos:[70,173] width:52 height:14 align:#left
+	label 'lbl19' "Raf Yuk." pos:[137,209] width:49 height:14 align:#left
+	label 'lbl8' "Raf Uzn." pos:[137,173] width:49 height:14 align:#left
+	label 'lbl7' "Raf Gen." pos:[137,140] width:45 height:14 align:#left
 	label 'lbl1' "Genislik" pos:[10,140] width:37 height:14 align:#left
 	label 'lbl2' "Uzunluk" pos:[10,173] width:37 height:14 align:#left
-	label 'lbl3' "Alin Gen." pos:[65,140] width:52 height:14 align:#left
+	label 'lbl3' "Alin Gen." pos:[70,140] width:52 height:14 align:#left
 	label 'lbl4' "Yukseklik" pos:[10,209] width:45 height:14 align:#left
-	label 'lbl5' "Duvar Kal." pos:[10,245] width:49 height:14 align:#left
-	label 'lbl10' "Raf Miktar" pos:[127,241] width:49 height:14 align:#left
+	label 'lbl5' "Duvar Kal." pos:[10,241] width:49 height:14 align:#left
+	label 'lbl10' "Raf Miktar" pos:[136,241] width:49 height:14 align:#left
+	label 'lbl11' "Dikme Gen." pos:[74,209] width:49 height:14 align:#left
+	label 'lbl12' "Dikme Miktar" pos:[73,241] width:49 height:14 align:#left
 	
-	GroupBox 'grp1' "Stand T?r?" pos:[3,10] width:195 height:48 align:#left
-	GroupBox 'grp2' "Stand Se?enekleri" pos:[3,66] width:195 height:48 align:#left
-	GroupBox 'grp3' "Stand Degerleri" pos:[2,122] width:195 height:171 align:#left
+	GroupBox 'grp1' "Stand Turu" pos:[3,10] width:195 height:48 align:#left
+	GroupBox 'grp2' "Stand Secenekleri" pos:[3,66] width:195 height:48 align:#left
+	GroupBox 'grp3' "Stand Degerleri" pos:[2,118] width:195 height:161 align:#left
 	
 	checkbox 'stnU' "U-Stand" pos:[96,28] width:66 height:21 align:#left
 	checkbox 'stnL' "L-Stand" pos:[10,28] width:66 height:21 align:#left
@@ -56,19 +213,30 @@ rollout standci "Stand Olusturucu"
 	checkbox 'aln_var' "Alin" pos:[10,83] width:35 height:21 align:#left
 	checkbox 'dik_var' "Dikme" pos:[100,83] width:42 height:21 align:#left
 	
-	spinner 'sprm' "" pos:[125,256] width:55 height:16 range:[0,1000,0] align:#left
-	spinner 'spgen' "" pos:[7,155] width:55 height:16 range:[0,1000,0] align:#left
-	spinner 'spuz' "" pos:[7,188] width:55 height:16 range:[0,1000,0] align:#left
-	spinner 'spyuk' "" pos:[7,224] width:55 height:16 range:[0,1000,0] align:#left	
-	spinner 'spdk' "" pos:[7,260] width:55 height:16 range:[0,1000,0] align:#left
-	spinner 'spag' "" pos:[65,156] width:55 height:16 range:[0,1000,0] align:#left
-	spinner 'sprg' "" pos:[125,156] width:55 height:16 range:[0,1000,0] align:#left
-	spinner 'spru' "" pos:[125,188] width:55 height:16 range:[0,1000,0] align:#left
-	spinner 'spay' "" pos:[65,188] width:55 height:16 range:[0,1000,0] align:#left
-	spinner 'spry' "" pos:[125,224] width:55 height:16 range:[0,1000,0] align:#left
+	spinner 'sprm' "" pos:[134,256] width:55 height:16 range:[0,10000,0] type:#integer align:#left
+	spinner 'spgen' "" pos:[7,155] width:55 height:16 range:[0,10000,0] type:#integer align:#left
+	spinner 'spuz' "" pos:[7,188] width:55 height:16 range:[0,10000,0] type:#integer align:#left
+	spinner 'spyuk' "" pos:[7,223] width:55 height:16 range:[0,10000,0] type:#integer align:#left
+	
+	spinner 'spdk' "" pos:[7,255] width:55 height:16 range:[0,10000,0] type:#integer align:#left
+	spinner 'spag' "" pos:[70,156] width:55 height:16 range:[0,10000,0] type:#integer align:#left
+	spinner 'sprg' "" pos:[134,156] width:55 height:16 range:[0,10000,0] type:#integer align:#left
+	spinner 'spru' "" pos:[134,188] width:55 height:16 range:[0,10000,0] type:#integer align:#left
+	spinner 'spay' "" pos:[70,188] width:55 height:16 range:[0,10000,0] type:#integer align:#left
+	spinner 'spry' "" pos:[134,224] width:55 height:16 range:[0,10000,0] type:#integer align:#left
+	spinner 'spmt' "" pos:[71,256] width:55 height:16 range:[0,10000,0] type:#integer align:#left
+	spinner 'spdg' "" pos:[71,224] width:55 height:16 range:[0,10000,0] type:#integer align:#left
+	
+	--Timer 'clocks' "standClock" pos:[16,282] width:24 height:24 interval:1000 align:#left 
+ 
 	
 	
 	
+	--KONTROL YAPISI
+	
+	-------------------------------------------
+	
+	--SAYAÇLAR
 	
 	
 	
@@ -99,18 +267,20 @@ rollout standci "Stand Olusturucu"
 					duvar3.pos = [-(standGenislik / 2 ) + (DuvarK), 0, 0]
 				)
 				
-				if (alin == true) do 
+				if (lStand and alin == true) do 
 				(
-					aln1 = Box width: algen length:(standUzunluk - DuvarK) height: alyuk
-					aln1.pos = [-((standGenislik / 2) - (algen / 2)),0,(standYukseklik) - (alyuk)]
-					aln2 = Box width: algen length:standGenislik height: alyuk
-					aln2.pos = [0,-((standUzunluk / 2) - (algen / 2)),(standYukseklik) - (alyuk)]
+					aln1 = Box width: algen length:(standUzunluk) height: alyuk
+					aln1.pos = [-((standGenislik / 2) - ((algen / 2) + (DuvarK / 2))),0,(standYukseklik) - (alyuk)]
+					aln2 = Box width: algen length: standGenislik height: alyuk
+					aln2.pos = [(DuvarK/2),-((standUzunluk / 2) - (algen / 2)),(standYukseklik) - (alyuk)]
 					rotate aln2 (AngleAxis 90 [0,0,1])
+					kol = Box width: algen length: algen height: standYukseklik
+					kol.pos = [-((standGenislik / 2) - ((algen / 2) + (DuvarK /2))),-((standUzunluk / 2) - (algen / 2)),0]
 				)
 				
 				if (alin == true and uStand == true) do
 				(
-					aln1 = Box width: algen length:standGenislik - DuvarK height: alyuk
+					aln1 = Box width: algen length:(standGenislik - DuvarK) height: alyuk
 					aln1.pos = [0,-((standUzunluk / 2) - (algen / 2)),(standYukseklik) - (alyuk)]
 					rotate aln1 (AngleAxis 90 [0,0,1])
 				)
@@ -121,11 +291,11 @@ rollout standci "Stand Olusturucu"
 					aralik = rafmin
 					rafAr = (rafmax - rafmin) / (rafMiktar)
 					raf1 = Box width: rafgen length:rafuz height: rafyuk
-					raf1.pos = [(standGenislik / 2) - ((rafgen / 2) + (DuvarK / 2)),0,aralik]
+					raf1.pos = [((float)standGenislik / 2) - (((float)rafgen / 2) + ((float)DuvarK / 2)),0,aralik]
 					for i = 1 to rafMiktar do
 					(
 						raf2 = instance raf1
-						raf2.pos = [(standGenislik / 2) - ((rafgen / 2) + (DuvarK / 2)),0,aralik]
+						raf2.pos = [((float)standGenislik / 2) - (((float)rafgen / 2) + ((float)DuvarK / 2)),0,aralik]
 						aralik += rafAr 
 						if (aralik >= rafmax) do (exit)
 					)
@@ -151,13 +321,18 @@ rollout standci "Stand Olusturucu"
 							
 						for i = 1 to rafDikme do
 						(
-							dikme1 = Box width:rafgen length: rafyuk height: dikmeuz
-							dikme1.pos = [(standGenislik / 2) - (rafgen / 2), aralik2, rafmin]
+							dikme1 = Box width:rafgen length: dikmeGenislik height: dikmeuz
+							dikme1.pos = [(((float)standGenislik / 2) - (((float)rafgen / 2) + ((float)DuvarK / 2))), aralik2, rafmin]
 							aralik2 += (dikmeAr * c) * isaret
 							isaret *= -1
 							c +=1
 							if (aralik2 < -((rafuz / 2) -  (rafyuk / 2))) do exit
 						)
+						
+						dikmeYan = Box width:rafgen length: dikmeGenislik height: dikmeuz
+						dikmeYan.pos = [(((float)standGenislik / 2) - (((float)rafgen / 2) + ((float)DuvarK / 2))),((float)(rafuz / 2) + ((float)dikmeGenislik / 2)),rafmin]
+						dikmeYan2 = Box width:rafgen length: dikmeGenislik height: dikmeuz
+						dikmeYan2.pos = [(((float)standGenislik / 2) - (((float)rafgen / 2) + ((float)DuvarK / 2))),-((float)(rafuz / 2) + ((float)dikmeGenislik / 2)),rafmin]
 					)
 				)
 			)
@@ -167,18 +342,14 @@ rollout standci "Stand Olusturucu"
 				
 			)
 	)
-	
-	--KONTROL YAPISI
 	on stnU changed theState do
 	(
 		if theState then
 			(
-				 messagebox "bump on" 
 				 uStand = true
 			)
 			else
 			(
-				 messagebox "bump off"
 				 uStand= false
 			)
 	)
@@ -186,12 +357,10 @@ rollout standci "Stand Olusturucu"
 	(
 		if theState then
 			(
-				 messagebox "bump on" 
 				 lStand = true
 			)
 			else
 			(
-				 messagebox "bump off"
 				 lStand= false
 			)
 	)
@@ -199,12 +368,10 @@ rollout standci "Stand Olusturucu"
 	(
 		if theState then
 			(
-				 messagebox "bump on" 
 				 raf = true
 			)
 			else
 			(
-				 messagebox "bump off"
 				 raf= false
 			)
 	)
@@ -212,43 +379,46 @@ rollout standci "Stand Olusturucu"
 	(
 		if theState then
 			(
-				 messagebox "bump on" 
 				 alin = true
 			)
 			else
 			(
-				 messagebox "bump off"
 				 alin = false
 			)
 	)
 	on dik_var changed theState do
 	(
 		if theState then
-			(
-				 messagebox "bump on" 
+			( 
 				 dikme = true
 			)
 			else
 			(
-				 messagebox "bump off"
 				 dikme = false
 			)
 	)
-	
-	-------------------------------------------
-	
-	--SAYAÇLAR
-	
-	on spgen changed Val do standGenislik = Val
-	on spuz changed Val do standUzunluk = Val
-	on spyukchanged Val do standYukseklik = Val
-	on spdk changed Val do DuvarK = Val
-	on spag changed Val do algen = Val
-	on spay changed Val do alyuk= Val
-	on sprg changed Val do rafgen= Val
-	on spru changed Val do rafuz= Val	
-	on spry changed Val do rafyuk= Val
-    on sprm changed Val do rafMiktar= Val			
+	on sprm changed Val do
+		rafMiktar= Val
+	on spgen changed Val do
+		standGenislik = Val
+	on spuz changed Val do
+		standUzunluk = Val
+	on spdk changed Val do
+		DuvarK = Val
+	on spag changed Val do
+		algen = Val
+	on sprg changed Val do
+		rafgen= Val
+	on spru changed Val do
+		rafuz= Val
+	on spay changed Val do
+		alyuk= Val
+	on spry changed Val do
+		rafyuk= Val
+	on spmt changed Val do
+		rafDikme = Val
+	on spdg changed Val do
+		dikmeGenislik= Val
 )
 )
 --Genel
@@ -297,55 +467,53 @@ function BendKontrol =
 			modPanel.setCurrentObject $.modifiers[#Bend]
 	)
 )
-rollout dialog1 "Genel"
+rollout dialog1 "Genel" width:232 height:571
 (
-	GroupBox 'grp1' "Objeler" pos:[4,7] width:322 height:64 align:#left
-	button 'b1' "KUTU" pos:[10,25] width:70 height:40 align:#left
-	button 'b2' "ZEMIN" pos:[90,25] width:70 height:40 align:#left
-	button 'b3' "SILINDIR" pos:[170,25] width:70 height:40 align:#left
+	GroupBox 'grp1' "Objeler" pos:[4,7] width:218 height:64 align:#left
+	button 'b1' "KUTU" pos:[13,25] width:37 height:35 align:#left
+	button 'b2' "ZEMIN" pos:[62,25] width:37 height:35 align:#left
+	button 'b3' "SILINDIR" pos:[111,25] width:50 height:35 align:#left
  
-	button 'b4' "KURE" pos:[250,25] width:70 height:40 align:#left
+	button 'b4' "KURE" pos:[179,25] width:35 height:35 align:#left
 	
-	GroupBox 'grp2' "Özellikler" pos:[4,76] width:322 height:136 range:[0,1000,0] align:#left
-	spinner 's1' "Genislik" pos:[12,96] width:93 height:16 range:[0,1000,0] align:#left
-	spinner 's2' "Yükselik" pos:[10,120] width:90 height:16 range:[0,1000,0] align:#left
-	spinner 's3' "Uzunluk" pos:[183,96] width:91 height:16 range:[0,1000,0] align:#left
-	spinner 's4' "Yaricap" pos:[182,119] width:94 height:16 range:[0,1000,0] align:#left	
+	GroupBox 'grp2' "Özellikler" pos:[3,84] width:221 height:185 align:#left
+	spinner 's1' "Genislik" pos:[12,101] width:63 height:16 range:[0,10000,0] align:#left
+	spinner 's2' "Yükselik" pos:[12,122] width:60 height:16 range:[0,10000,0] align:#left
+	spinner 's3' "Uzunluk" pos:[12,145] width:61 height:16 range:[0,10000,0] align:#left
+	spinner 's4' "Yaricap" pos:[12,167] width:64 height:16 range:[0,10000,0] align:#left	
 	
 	
-	spinner 'ssgw' "Seg-W" pos:[20,146] width:68 height:16 range:[0,1000,0] type:#integer align:#left
-	spinner 'ssgl' "Seg-L" pos:[117,147] width:68 height:16 range:[0,1000,0] type:#integer align:#left
-	spinner 'ssgh' "Seg-H" pos:[214,145] width:68 height:16 range:[0,100,0] type:#integer align:#left
-	spinner 'ss' "Segments" pos:[20,171] width:54 height:16 range:[0,200,0] type:#integer align:#left
-	spinner 'scps' "Cap Seg" pos:[117,173] width:55 height:16 range:[0,200,0] type:#integer align:#left
-	spinner 'ssd' "Sides" pos:[214,171] width:70 height:16 range:[0,200,0] type:#integer align:#left
 	
-	GroupBox 'grp5' "Modifiers" pos:[3,215] width:322 height:176 align:#left
-	button 'plg_btn' "Polygon" pos:[17,235] width:54 height:24 align:#left
+	spinner 'ssgw' "Seg-W" pos:[115,101] width:68 height:16 range:[0,1000,0] type:#integer align:#left
+	spinner 'ssgl' "Seg-L" pos:[120,123] width:68 height:16 range:[0,1000,0] type:#integer align:#left
+	spinner 'ssgh' "Seg-H" pos:[118,145] width:68 height:16 range:[0,100,0] type:#integer align:#left
+	spinner 'ss' "Segments" pos:[11,195] width:53 height:16 range:[0,200,0] type:#integer align:#left
+	spinner 'scps' "Cap Seg" pos:[11,218] width:59 height:16 range:[0,200,0] type:#integer align:#left
+	spinner 'ssd' "Sides" pos:[11,241] width:74 height:16 range:[0,200,0] type:#integer align:#left
 	
-	button 'vrx_btn' "Vertex" pos:[77,236] width:54 height:24 align:#left
-	button 'edg_btn' "Edge" pos:[138,235] width:54 height:24 align:#left
-	button 'button1x' "Button" pos:[198,235] width:54 height:24 align:#left
-	button 'btn13' "Button" pos:[258,235] width:54 height:24 align:#left
+	GroupBox 'grp5' "Modifiers" pos:[6,279] width:218 height:285 align:#left
+	button 'plg_btn' "Polygon" pos:[20,299] width:54 height:24 align:#left
 	
-	button 'ext_btn' "Extrude" pos:[16,265] width:54 height:24 align:#left
-	button 'bvl_btn' "Bevel" pos:[77,264] width:54 height:24 align:#left
-	button 'ins_btn' "Inset" pos:[138,263] width:54 height:24 align:#left
-	button 'brd_btn' "Bridge" pos:[197,263] width:54 height:24 align:#left
-	button 'att_btn' "Attach" pos:[257,264] width:54 height:24 align:#left
-	button 'uvw_btn' "UV Map" pos:[16,297] width:54 height:24 align:#left
-	button 'shl_btn' "Shell" pos:[77,296] width:54 height:24 align:#left
-	button 'chm_btn' "Chamfer" pos:[138,295] width:54 height:24 align:#left
-	button 'rmv_btn' "Remove" pos:[197,295] width:54 height:24 align:#left
-	button 'con_btn' "Connect" pos:[257,296] width:54 height:24 align:#left
-	button 'bnd_btn' "Bend" pos:[16,330] width:54 height:24 align:#left
-	button 'btn26' "Problon" pos:[77,329] width:54 height:24 align:#left
-	button 'lne_btn' "Line" pos:[138,328] width:54 height:24 align:#left
-	button 'txt_btn' "Text" pos:[197,327] width:54 height:24 align:#left
-	button 'btn29' "Button" pos:[257,330] width:54 height:24 align:#left
-	button 'hin_btn' "HingeFromEdge" pos:[16,359] width:115 height:24 align:#left
+	button 'vrx_btn' "Vertex" pos:[21,329] width:54 height:24 align:#left
+	button 'edg_btn' "Edge" pos:[21,359] width:54 height:24 align:#left
+	button 'ttt_btn' "Nokta Raf" pos:[135,300] width:54 height:24 align:#left
 	
-	Timer 'clock' "testClock" pos:[13,218] width:24 height:24 interval:500 align:#left
+	button 'ext_btn' "Extrude" pos:[79,299] width:54 height:24 align:#left
+	button 'bvl_btn' "Bevel" pos:[80,328] width:54 height:24 align:#left
+	button 'ins_btn' "Inset" pos:[82,417] width:54 height:24 align:#left
+	button 'brd_btn' "Bridge" pos:[81,389] width:54 height:24 align:#left
+	button 'att_btn' "Attach" pos:[20,417] width:54 height:24 align:#left
+	button 'uvw_btn' "UV Map" pos:[81,473] width:54 height:24 align:#left
+	button 'shl_btn' "Shell" pos:[21,473] width:54 height:24 align:#left
+	button 'chm_btn' "Chamfer" pos:[80,359] width:54 height:24 align:#left
+	button 'rmv_btn' "Remove" pos:[20,445] width:54 height:24 align:#left
+	button 'con_btn' "Connect" pos:[81,445] width:54 height:24 align:#left
+	button 'bnd_btn' "Bend" pos:[21,389] width:54 height:24 align:#left
+	button 'lne_btn' "Line" pos:[22,502] width:54 height:24 align:#left
+	button 'txt_btn' "Text" pos:[81,502] width:54 height:24 align:#left
+	button 'hin_btn' "HingeFromEdge" pos:[21,531] width:115 height:24 align:#left
+	
+	Timer 'clock' "testClock" pos:[16,282] width:24 height:24 interval:1000 align:#left
 
 
 		function AktifEt =
@@ -418,14 +586,11 @@ rollout dialog1 "Genel"
 
 	
 --------------------------------------------------------------	
-	on ttt pressed do(
-		startTool foo
-	)
+	
+	
 	on b1 pressed do
 	(
-		obj = Box()
-		select obj
-		max modify mode
+		startTool otobox
 	)
 	on b2 pressed do
 	(
@@ -441,49 +606,47 @@ rollout dialog1 "Genel"
 	)
 	on b4 pressed do
 	(
-		obj = Sphere()
-		select obj
-		max modify mode
+		startTool otoSPH
 	)
 	on s1 changed val do
 	(
-		$.width = val
+		try($.width = val)catch(messageBox "Objede bu özellik yok veya modifiye edilmis. ")
 	)
 	on s2 changed val do
 	(
-		$.height = val
+		try($.height = val)catch(messageBox "Objede bu özellik yok veya modifiye edilmis. ")
 	)
 	on s3 changed val do
 	(
-		$.length = val
+		try($.length = val)catch(messageBox "Objede bu özellik yok veya modifiye edilmis. ")
 	)
 	on s4 changed val do
 	(
-		$.radius = val
+		try($.radius = val)catch(messageBox "Objede bu özellik yok veya modifiye edilmis. ")
 	)
 	on ssgw changed val do
 	(
-		$.widthsegs = val
+		try($.widthsegs = val)catch(messageBox "Objede bu özellik yok veya modifiye edilmis. ")
 	)
 	on ssgl changed val do
 	(
-		$.lengthsegs = val
+		try($.lengthsegs = val)catch(messageBox "Objede bu özellik yok veya modifiye edilmis. ")
 	)
 	on ssgh changed val do
 	(
-		$.heightsegs = val
+		try($.heightsegs = val)catch(messageBox "Objede bu özellik yok veya modifiye edilmis. ")
 	)
 	on ss changed val do
 	(
-		$.segs = val
+		try($.segs = val)catch(messageBox "Objede bu özellik yok veya modifiye edilmis. ")
 	)
 	on scps changed val do
 	(
-		$.capsegs = val
+		try($.capsegs = val)catch(messageBox "Objede bu özellik yok veya modifiye edilmis. ")
 	)
 	on ssd changed val do
 	(
-		$.sides = val
+		try($.sides = val)catch(messageBox "Objede bu özellik yok veya modifiye edilmis. ")
 	)
 	on plg_btn pressed do
 	(
@@ -493,46 +656,15 @@ rollout dialog1 "Genel"
 	(
 		PolyKontrol 1
 	)
-	on lne_btn pressed do
-	(
-		obj = line()
-		select obj
-		macros.run "Editable Spline Object" "ESpline_Create_Line"
-	)
-	on txt_btn pressed do
-	(
-		obj = text()
-		select obj
-		max modify mode
-	)
-	on hin_btn pressed do
-	(
-		try
-		(
-			if (subObjectLevel == 4) then
-			(
-				obj = $
-				obj.modifiers[#Edit_Poly].SetOperation #HingeFromEdge
-				macros.run "Ribbon - Modeling" "EPoly_HingeOptions"
-			)
-			else 
-			(
-				messageBox "Polygon modunda olmaniz gerekir"
-			)
-		)
-		catch(messageBox "Bir obje seçili degil veya bu objede Edit Poly yok.")
-	)
 	on edg_btn pressed do
 	(
 		PolyKontrol 2
 	)
-	on bnd_btn pressed do
+	on ttt_btn pressed do
 	(
-		if classOf $ != UndefinedClass then(
-		BendKontrol()
-			)
-		else(messageBox "Obje Seçiniz")
-	)
+			MainFloater = NewRolloutFloater "Nokta Raf" 250 150
+			addRollout Boxtool MainFloater
+		)
 	on ext_btn pressed do
 	(
 		try
@@ -638,36 +770,46 @@ rollout dialog1 "Genel"
 		else(messageBox "Edge veya Vertex modunda olmaniz gerekir"))
 		catch(messageBox "Bir obje seçili degil veya bu objede Edit Poly yok.")
 	)
-	on btn25 pressed do
+	on bnd_btn pressed do
 	(
-		--PolyKontrol()
+		if classOf $ != UndefinedClass then(
+		BendKontrol()
+			)
+		else(messageBox "Obje Seçiniz")
 	)
-	on btn26 pressed do
+	on lne_btn pressed do
 	(
-		--PolyKontrolPlg()
+		obj = line()
+		select obj
+		macros.run "Editable Spline Object" "ESpline_Create_Line"
 	)
-	on btn27 pressed do
+	on txt_btn pressed do
 	(
-		--PolyKontrolEdg()
+		obj = text()
+		select obj
+		max modify mode
 	)
-	on btn28 pressed do
+	on hin_btn pressed do
 	(
-		--PolyKontrolEdg()
+		try
+		(
+			if (subObjectLevel == 4) then
+			(
+				obj = $
+				obj.modifiers[#Edit_Poly].SetOperation #HingeFromEdge
+				macros.run "Ribbon - Modeling" "EPoly_HingeOptions"
+			)
+			else 
+			(
+				messageBox "Polygon modunda olmaniz gerekir"
+			)
+		)
+		catch(messageBox "Bir obje seçili degil veya bu objede Edit Poly yok.")
 	)
-	on btn29 pressed do
-	(
-		--PolyKontrolEdg()
-	)
-	on btn30 pressed do
-	(
-		--PolyKontrolPlg()
-	)
-	
-	
 	on clock tick do
 	(
 		try(
-		if classOf $ == UndefinedClass or classOf $ == ModifierClass do 
+		if  classOf $ == UndefinedClass then 
 		(
 			s1.value = 0
 			s2.value = 0
@@ -680,7 +822,7 @@ rollout dialog1 "Genel"
 			ssd.value= 0
 			DeAktifEt 0
 		)
-		if classOf $ == Box do
+		else if classOf $ == Box then
 		(
 			AktifEt()
 			DeAktifEt 1
@@ -691,7 +833,7 @@ rollout dialog1 "Genel"
 			ssgl.value = $.lengthsegs
 			ssgh.value = $.heightsegs
 		)
-		if classOf $ == Plane do
+		else if classOf $ == Plane then
 		(
 			AktifEt()
 			DeAktifEt 2
@@ -700,14 +842,14 @@ rollout dialog1 "Genel"
 			ssgw.value = $.widthsegs
 			ssgl.value = $.lengthsegs
 		)
-		if classOf $ == Sphere do
+		else if classOf $ == Sphere then
 		(
 			AktifEt()
 			DeAktifEt 3
 			s4.value = $.radius
 			ss.value = $.segs			
 		)
-		if classOf $ == Cylinder do
+		else if classOf $ == Cylinder then
 		(
 			AktifEt()
 			DeAktifEt 4
@@ -722,7 +864,7 @@ rollout dialog1 "Genel"
 	)
 )
 )
-nFloater = newRolloutFloater "StandCreator" 400 400
+nFloater = newRolloutFloater "StandCreator" 240 400
 addRollout standci nFloater
 addRollout dialog1 nFloater
 cui.registerDialogBar nFloater
