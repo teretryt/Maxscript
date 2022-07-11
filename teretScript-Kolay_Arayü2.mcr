@@ -18,30 +18,42 @@ rafMiktar = 9
 rafDikme = 4
 dikmeAr = 0
 dikmeGenislik = 9
+kg = 20
+ky = 15
+kmiktar = 5
 
 alyuk = 50
 algen = 4
+
+
+
+--Diziler
+kayitlar = #()
 
 -- Kontrol
 alin = false
 raf = false
 dikme = false
+kayit = false
 lStand = false
 uStand = false
 
 	duvar1x = ((float)standGenislik / 2) 
 	duvar2y = (((float)standUzunluk / 2) - ((float)DuvarK / 2))
 	ud = 0
+	
+	
+	
 	rollout Boxtool "Box Creator"
 	(
-		spinner count "Number:" type:#integer range: [1,100,10]
-		spinner Yukseklik "Yukseklik:" range: [1,100,10]
-		spinner Uzunluk "Uzunluk:" range: [1,100,200]
-		spinner Derinlik "Derinlik:" range: [1,100,40]
+		spinner count "Number:" type:#integer range: [1,1000,10]
+		spinner Yukseklik "Yukseklik:" range: [1,1000,10]
+		spinner Uzunluk "Uzunluk:" range: [1,1000,200]
+		spinner Derinlik "Derinlik:" range: [1,1000,40]
 		spinner distance "Distance Inbetween:" range: [1,200,25]
 		pickbutton create "Create Boxes" width:120
 		
-		
+		local intRay,creationTransform
 		--GET AN OBJECT TO CREATE OTHER OBJECTS ON
 		on create picked obj do
 		(
@@ -104,6 +116,7 @@ uStand = false
 						rotate b2 (AngleAxis 90 [0,0,1])
 						rotate b2 (AngleAxis 90 [1,0,0])
 						b2.pos = [0,-((i-1)*(distance.value)),(Derinlik.value / 2)]
+						append kayitlar b2
 						)
 						else if ud == 2 then 
 						(
@@ -112,13 +125,15 @@ uStand = false
 						b2.transform = creationTransform
 						rotate b2 (AngleAxis 90 [0,1,0])
 						b2.pos = [((i-1)*(distance.value)),0,(Derinlik.value/2)]
+						append kayitlar b2
 						)
 						else
 						(
 						b2 = instance b						
 						--ROTATE AND PLACE THE BOX
 						b2.transform = creationTransform
-						b2.pos = [0,((i-1)*(distance.value)),0]
+						b2.pos = [0,0,((i-1)*(distance.value))]
+						append kayitlar b2
 						)
 					)
 					delete b
@@ -126,6 +141,38 @@ uStand = false
 				)
 				)
 				)
+			)
+			
+			on distance changed val do
+			(
+				if kayitlar.count !=0 do 
+				(
+					for i = 1 to kayitlar.count do
+					(
+						obj = kayitlar[i]
+						delete obj
+					)
+					kayitlar = #()
+				)
+				b=Box()
+				b.length= Uzunluk.value 
+				b.width= Derinlik.value 
+				b.height= Yukseklik.value
+				b.transform = creationTransform
+				b.pos = [distance.value,0,0]
+				
+				for i = 1 to count.value do
+				(
+					in coordsys creationTransform
+					(
+						b2 = instance b						
+						--ROTATE AND PLACE THE BOX
+						b2.transform = creationTransform
+						b2.pos = [0,0,((i-1)*(val))]
+						append kayitlar b2
+					)
+				)
+				delete b
 			)
 		)
 
@@ -153,42 +200,45 @@ uStand = false
 		targ.height = gridDist.z
 		)
 		)
-		)
-
-		tool otoSPH
-		(
-		local targ
-		on mousePoint click do coordsys grid 
-		(
-		if click == 1 then -- create key, back & fill lights at mousedown
-		(
-		targ = Sphere pos:gridPoint isSelected:on
-		targ.pos.z = 0
-		)
-		if click == 3 then #stop
-		)
-		on mouseMove click do
-		(
-		if click == 2 then -- drag out & round on x-y plane
-		(
-		targ.radius = abs gridDist.x
-		)
-		else if click == 3 then -- drag up to elevate lights
-		(
-		targ.segs = gridDist.z
-		)
-		)
-		)
+)
 
 
-
+--Fonskiyonlar
 
 --Stand
 (	
-	
-rollout standci "Stand Olusturucu" width:203 height:334
+fn Kay=
 (
-	button 'btn1' "OLUSTUR" pos:[3,292] width:197 height:34 align:#left
+	try(
+	if kayitlar.count !=0 do 
+	(
+		for i = 1 to kayitlar.count do
+		(
+			obj = kayitlar[i]
+			delete obj
+		)
+		kayitlar = #()
+	)
+
+aralik = ((float)(standUzunluk - (DuvarK + algen)) / (kmiktar + 1))
+					kayit1 = Box width: standGenislik length: kg height: ky
+					kayit1.pos = [(DuvarK / 2),(((float)standUzunluk / 2) - (DuvarK )),(standYukseklik - ky)]
+					baslangic = kayit1.pos
+					for i = 1 to kmiktar do
+					(
+						kayitdvm = instance kayit1
+						kayitdvm.pos = baslangic
+						kayitdvm.pos.y -= aralik * i
+						append kayitlar kayitdvm
+					)
+					delete kayit1
+				)
+				catch(kayitlar = #())
+)
+
+rollout standci "Stand Olusturucu" width:203 height:354
+(
+	button 'btn1' "OLUSTUR" pos:[4,315] width:193 height:34 align:#left
 	
 	label 'lbl9' "Alin Yuk." pos:[70,173] width:52 height:14 align:#left
 	label 'lbl19' "Raf Yuk." pos:[137,209] width:49 height:14 align:#left
@@ -202,16 +252,19 @@ rollout standci "Stand Olusturucu" width:203 height:334
 	label 'lbl10' "Raf Miktar" pos:[136,241] width:49 height:14 align:#left
 	label 'lbl11' "Dikme Gen." pos:[74,209] width:49 height:14 align:#left
 	label 'lbl12' "Dikme Miktar" pos:[73,241] width:49 height:14 align:#left
+	label 'lbl27' "Kayit Mik." pos:[10,276] width:49 height:14 align:#left
+	label 'lbl28' "Kayit Gen." pos:[73,276] width:49 height:14 align:#left
 	
 	GroupBox 'grp1' "Stand Turu" pos:[3,10] width:195 height:48 align:#left
 	GroupBox 'grp2' "Stand Secenekleri" pos:[3,66] width:195 height:48 align:#left
-	GroupBox 'grp3' "Stand Degerleri" pos:[2,118] width:195 height:161 align:#left
+	GroupBox 'grp3' "Stand Degerleri" pos:[2,118] width:195 height:194 align:#left
 	
 	checkbox 'stnU' "U-Stand" pos:[96,28] width:66 height:21 align:#left
 	checkbox 'stnL' "L-Stand" pos:[10,28] width:66 height:21 align:#left
 	checkbox 'raf_var' "Raf" pos:[57,83] width:39 height:21 align:#left
 	checkbox 'aln_var' "Alin" pos:[10,83] width:35 height:21 align:#left
 	checkbox 'dik_var' "Dikme" pos:[100,83] width:42 height:21 align:#left
+	checkbox 'kayit_var' "Kayit" pos:[148,83] width:42 height:21 align:#left
 	
 	spinner 'sprm' "" pos:[134,256] width:55 height:16 range:[0,10000,0] type:#integer align:#left
 	spinner 'spgen' "" pos:[7,155] width:55 height:16 range:[0,10000,0] type:#integer align:#left
@@ -226,6 +279,8 @@ rollout standci "Stand Olusturucu" width:203 height:334
 	spinner 'spry' "" pos:[134,224] width:55 height:16 range:[0,10000,0] type:#integer align:#left
 	spinner 'spmt' "" pos:[71,256] width:55 height:16 range:[0,10000,0] type:#integer align:#left
 	spinner 'spdg' "" pos:[71,224] width:55 height:16 range:[0,10000,0] type:#integer align:#left
+	spinner 'spkam' "" pos:[7,290] width:55 height:16 range:[0,10000,0] type:#integer align:#left
+	spinner 'spkag' "" pos:[71,291] width:55 height:16 range:[0,10000,0] type:#integer align:#left
 	
 	--Timer 'clocks' "standClock" pos:[16,282] width:24 height:24 interval:1000 align:#left 
  
@@ -244,6 +299,7 @@ rollout standci "Stand Olusturucu" width:203 height:334
 	(
 		try
 			(
+				undo on(
 				
 			if ( ( lStand == false and uStand == false ) or ( lStand  and uStand ) ) do 
 				(
@@ -285,8 +341,15 @@ rollout standci "Stand Olusturucu" width:203 height:334
 					rotate aln1 (AngleAxis 90 [0,0,1])
 				)
 				
+				
+				if (kayit) do
+				(										
+					Kay()	
+				)
+				
 				if (raf) do 
 				(
+					grup = #()
 					i = 1
 					aralik = rafmin
 					rafAr = (rafmax - rafmin) / (rafMiktar)
@@ -297,6 +360,7 @@ rollout standci "Stand Olusturucu" width:203 height:334
 						raf2 = instance raf1
 						raf2.pos = [((float)standGenislik / 2) - (((float)rafgen / 2) + ((float)DuvarK / 2)),0,aralik]
 						aralik += rafAr 
+						append grup raf2
 						if (aralik >= rafmax) do (exit)
 					)
 					delete raf1
@@ -326,6 +390,7 @@ rollout standci "Stand Olusturucu" width:203 height:334
 							aralik2 += (dikmeAr * c) * isaret
 							isaret *= -1
 							c +=1
+							append grup dikme1
 							if (aralik2 < -((rafuz / 2) -  (rafyuk / 2))) do exit
 						)
 						
@@ -333,9 +398,29 @@ rollout standci "Stand Olusturucu" width:203 height:334
 						dikmeYan.pos = [(((float)standGenislik / 2) - (((float)rafgen / 2) + ((float)DuvarK / 2))),((float)(rafuz / 2) + ((float)dikmeGenislik / 2)),rafmin]
 						dikmeYan2 = Box width:rafgen length: dikmeGenislik height: dikmeuz
 						dikmeYan2.pos = [(((float)standGenislik / 2) - (((float)rafgen / 2) + ((float)DuvarK / 2))),-((float)(rafuz / 2) + ((float)dikmeGenislik / 2)),rafmin]
+						append grup dikmeYan
+						append grup dikmeYan2												
 					)
+					Mycolor = color (random 0 255) (random 0 255) (random 0 255)
+					for obj in grup do (obj.wirecolor = MyColor)
 				)
 			)
+		)
+		
+		sprm.value = rafMiktar
+		spgen.value = standGenislik
+		spuz.value = standUzunluk
+		spyuk.value = standYukseklik
+		spdk.value = DuvarK
+		spag.value = algen
+		sprg.value = rafgen
+		spru.value = rafuz
+		spay.value = alyuk
+		spry.value = rafYuk
+		spmt.value = rafDikme
+		spdg.value = dikmeGenislik
+		spkam.value = kmiktar
+		spkag.value = kg
 		)
 		catch
 			(
@@ -397,6 +482,17 @@ rollout standci "Stand Olusturucu" width:203 height:334
 				 dikme = false
 			)
 	)
+	on kayit_var changed theState do
+	(
+		if theState then
+			( 
+				 kayit = true
+			)
+			else
+			(
+				 kayit = false
+			)
+	)
 	on sprm changed Val do
 		rafMiktar= Val
 	on spgen changed Val do
@@ -419,6 +515,13 @@ rollout standci "Stand Olusturucu" width:203 height:334
 		rafDikme = Val
 	on spdg changed Val do
 		dikmeGenislik= Val
+	on spkam changed Val do
+	(
+		kmiktar = Val
+		Kay()
+	)
+	on spkag changed Val do
+		kg = Val
 )
 )
 --Genel
@@ -606,7 +709,9 @@ rollout dialog1 "Genel" width:232 height:571
 	)
 	on b4 pressed do
 	(
-		startTool otoSPH
+		obj = Sphere()
+		select obj
+		max modify mode
 	)
 	on s1 changed val do
 	(
