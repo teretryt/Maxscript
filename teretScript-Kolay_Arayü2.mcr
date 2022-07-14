@@ -29,7 +29,7 @@ algen = 4
 
 --Diziler
 kayitlar = #()
-
+kayitlarBox = #()
 -- Kontrol
 alin = false
 raf = false
@@ -145,14 +145,14 @@ uStand = false
 			
 			on distance changed val do
 			(
-				if kayitlar.count !=0 do 
+				if kayitlarBox.count !=0 do 
 				(
-					for i = 1 to kayitlar.count do
+					for i = 1 to kayitlarBox.count do
 					(
 						obj = kayitlar[i]
 						delete obj
 					)
-					kayitlar = #()
+					kayitlarBox = #()
 				)
 				b=Box()
 				b.length= Uzunluk.value 
@@ -169,7 +169,7 @@ uStand = false
 						--ROTATE AND PLACE THE BOX
 						b2.transform = creationTransform
 						b2.pos = [0,0,((i-1)*(val))]
-						append kayitlar b2
+						append kayitlarBox b2
 					)
 				)
 				delete b
@@ -212,10 +212,12 @@ fn Kay=
 	try(
 	if kayitlar.count !=0 do 
 	(
+		local obj
 		for i = 1 to kayitlar.count do
 		(
 			obj = kayitlar[i]
-			delete obj
+			if (not isDeleted kayitlar[i]) do(
+			delete obj)
 		)
 		kayitlar = #()
 	)
@@ -292,7 +294,6 @@ rollout standci "Stand Olusturucu" width:203 height:354
 	-------------------------------------------
 	
 	--SAYAÇLAR
-	
 	
 	
 	on btn1 pressed do
